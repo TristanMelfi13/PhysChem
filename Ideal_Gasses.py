@@ -6,20 +6,36 @@ from random import *
 ScreenSize = (600, 400)
 
 
+def Distance(x1, y1, x2, y2):
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+
+
+def RMSVelocity(Temp, MolarMass):
+    MolarMass /= 1000
+    return math.sqrt((Temp * 8.3145 * 3) / MolarMass)
+
+
 class Particle:
-    def __init__(self, Xcor, Ycor, XVel, YVel, CollisionFlag):
+    def __init__(self, Xcor, Ycor, XVel, YVel, CollisionFlag, MolarMass):
         self.Xcor = Xcor
         self.Ycor = Ycor
         self.XVelocity = XVel
         self.YVelocity = YVel
         self.CollisionFlag = CollisionFlag
+        self.MolarMass = MolarMass
         self.Visual = turtle.Turtle()
         self.Visual.shape("circle")
         self.Visual.shapesize(0.5)
+
     def InitializeTurtle(self):
         self.Visual.speed("fastest")
         self.Visual.penup()
         self.Visual.goto(self.Xcor, self.Ycor)
+        DistanceFromOrigin = Distance(self.Visual.xcor(), 0, self.Visual.ycor(), 0)
+        Accel = RMSVelocity(300, self.MolarMass)
+        AccelTest = RMSVelocity(300, self.MolarMass) / 1000
+        self.XVelocity += (Accel * (self.Visual.xcor() / DistanceFromOrigin)) / 1000
+        self.YVelocity += (Accel * (self.Visual.ycor() / DistanceFromOrigin)) / 1000
 
     def MoveVisual(self):
         self.Visual.penup()
@@ -32,6 +48,7 @@ class Particle:
             self.XVelocity *= -1
         if self.Visual.ycor() < ((ScreenSize[1] / 2) * -1) + 14.5 or self.Visual.ycor() > ((ScreenSize[1] / 2) - 6):
             self.YVelocity *= -1
+
     def CheckForParticleCollision(self, Iter, PList):
         for j in range(len(PList)):
             if j != Iter:
@@ -49,12 +66,10 @@ class Particle:
                     self.CollisionFlag = 15
 
 
-
-
 def CreateNewParticle():
     NewParticle = Particle(randrange(-1 * int(ScreenSize[0] / 2), int(ScreenSize[0] / 2)),
                            randrange(-1 * int(ScreenSize[1] / 2), int(ScreenSize[1] / 2)),
-                           random() * (5 + 5) - 5, random() * (5 + 5) - 5, 0)
+                           random() * (1 + 1) - 1, random() * (1 + 1) - 1, 0, 4)
     if NewParticle.Xcor > 0:
         NewParticle.Xcor -= 100
     else:
@@ -75,11 +90,21 @@ def CreateNewParticle():
 
 ParticleList = []
 
-for i in range(18):
+for i in range(5):
     ParticleList.append(CreateNewParticle())
 
 wn = turtle.Screen()
 wn.setup(width=ScreenSize[0], height=ScreenSize[1])
+
+
+def HopefullyTempEqualsWhateverItsSetTo(PList):
+    sum = 0
+    for i in range(len(PList)):
+        sum += (0.5) * (6.6422E-24) * math.pow((math.sqrt((math.pow(PList[i].XVelocity, 2) + math.pow(PList[i].YVelocity, 2)))), 2)
+    print(sum / len(PList))
+
+
+HopefullyTempEqualsWhateverItsSetTo(ParticleList)
 
 while True:
     XVelSum = 0
@@ -92,3 +117,4 @@ while True:
         ParticleList[i].DetectWallCollision()
         ParticleList[i].CheckForParticleCollision(i, ParticleList)
         turtle.update()
+
